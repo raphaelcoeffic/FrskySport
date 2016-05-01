@@ -20,9 +20,10 @@
 #include <Arduino.h>
 
 void setSportSensorId( uint8_t sensor_id );
+void setSportSensorValues( uint8_t n_values );
 
 void initSportUart();
-void setSportNewData( uint16_t id, uint32_t value );
+void setSportNewData( uint8_t idx, uint16_t id, uint32_t value );
 
 // UART's state.
 #define   IDLE               0 // Idle state, both transmit and receive possible.

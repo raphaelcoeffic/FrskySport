@@ -118,9 +118,17 @@ static uint8_t ByteStuffByte = 0;
 
 static uint8_t LastRx;
 static uint8_t TxSportData[7];
-uint16_t Crc;
-uint8_t volatile sportData[7];
-uint8_t volatile sportDataLock;
+static uint8_t TxSportDataIdx = 0;
+static uint8_t TxSportDataMax = 0;
+static uint16_t Crc;
+
+struct sport_data_t {
+  volatile uint8_t data[7];
+  volatile uint8_t lock;
+};
+
+// maximum 8 different values
+static sport_data_t sportData[8];
 
 volatile bool SportRxDataReady;
 volatile uint8_t SportRxData;
@@ -292,14 +300,19 @@ ISR(TIMER1_COMPA_vect)
 
             if ( SwUartRXData == sensorId ) {
               // if ( sendStatus == LOADED ) {
-                if ( sportDataLock == 0 ) {
-                  TxSportData[0] = sportData[0];
-                  TxSportData[1] = sportData[1];
-                  TxSportData[2] = sportData[2];
-                  TxSportData[3] = sportData[3];
-                  TxSportData[4] = sportData[4];
-                  TxSportData[5] = sportData[5];
-                  TxSportData[6] = sportData[6];
+                sport_data_t* input_data = &(sportData[TxSportDataIdx]);
+                if ( input_data->lock == 0 ) {
+
+                  if(++TxSportDataIdx == TxSportDataMax)
+                    TxSportDataIdx = 0;
+
+                  TxSportData[0] = input_data->data[0];
+                  TxSportData[1] = input_data->data[1];
+                  TxSportData[2] = input_data->data[2];
+                  TxSportData[3] = input_data->data[3];
+                  TxSportData[4] = input_data->data[4];
+                  TxSportData[5] = input_data->data[5];
+                  TxSportData[6] = input_data->data[6];
                 }
                 else { // Discard frame to be sent if data is locked
                   TxSportData[0] = 0;
@@ -410,6 +423,10 @@ void setSportSensorId( uint8_t sensor_id )
   sendSensorValues = true;
 }
 
+void setSportSensorValues( uint8_t n_values )
+{
+  TxSportDataMax = n_values;
+}
 
 // \brief  Function to initialize the UART for Sport protocol
 //  This function will set up pins to transmit and receive on.
@@ -446,19 +463,20 @@ void initSportUart()
 #endif
 }
 
-void setSportNewData( uint16_t id, uint32_t value )
+void setSportNewData( uint8_t idx, uint16_t id, uint32_t value )
 {
-  sportDataLock = 1;
+  sport_data_t* input_data = &(sportData[idx]);
+  input_data->lock = 1;
 
-  sportData[0] = 0x10;
-  sportData[1] = id; // low byte
-  sportData[2] = id >> 8; // hight byte
-  sportData[3] = value;
-  sportData[4] = value >> 8;
-  sportData[5] = value >> 16;
-  sportData[6] = value >> 24;
+  input_data->data[0] = 0x10;
+  input_data->data[1] = id; // low byte
+  input_data->data[2] = id >> 8; // hight byte
+  input_data->data[3] = value;
+  input_data->data[4] = value >> 8;
+  input_data->data[5] = value >> 16;
+  input_data->data[6] = value >> 24;
 
-  sportDataLock = 0;
+  input_data->lock = 0;
 }
 
 uint8_t returnSportState()
