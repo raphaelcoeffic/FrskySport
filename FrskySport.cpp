@@ -412,6 +412,16 @@ void setSportSensorId( uint8_t sensor_id )
   sendSensorValues = true;
 }
 
+void disableSportSensor()
+{
+  sendSensorValues = false;
+}
+
+void enableSportSensor()
+{
+  sendSensorValues = true;
+}
+
 void setSportSensorValues( uint8_t n_values )
 {
   TxSportDataMax = n_values;

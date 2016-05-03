@@ -22,6 +22,9 @@
 void setSportSensorId( uint8_t sensor_id );
 void setSportSensorValues( uint8_t n_values );
 
+void disableSportSensor();
+void enableSportSensor();
+
 void initSportUart();
 void setSportNewData( uint8_t idx, uint16_t id, uint32_t value );
 
