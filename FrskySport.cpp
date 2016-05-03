@@ -313,28 +313,17 @@ ISR(TIMER1_COMPA_vect)
                   TxSportData[4] = input_data->data[4];
                   TxSportData[5] = input_data->data[5];
                   TxSportData[6] = input_data->data[6];
+                  state = TxPENDING;
+                  sendStatus = SENDING;
+
+                  // 400 uS gap before sending
+                  OCR1A += ( DELAY_400 - TICKS2WAITONESPORT);
                 }
                 else { // Discard frame to be sent if data is locked
-                  TxSportData[0] = 0;
-                  TxSportData[1] = 0;
-                  TxSportData[2] = 0;
-                  TxSportData[3] = 0;
-                  TxSportData[4] = 0;
-                  TxSportData[5] = 0;
-                  TxSportData[6] = 0;
+                  // Wait for idle time
+                  state = WAITING;
+                  OCR1A += DELAY_3500; // 3.5mS gap before listening
                 }
-
-                state = TxPENDING;
-                sendStatus = SENDING;
-
-                // 400 uS gap before sending
-                OCR1A += ( DELAY_400 - TICKS2WAITONESPORT);
-              // }
-              // else {
-              //   // Wait for idle time
-              //   state = WAITING;
-              //   OCR1A += DELAY_3500; // 3.5mS gap before listening
-              // }
             }
             else { // it is not the expected device ID
               state = WAITING;
